@@ -12,11 +12,13 @@ const subscribe = new Scenes.WizardScene(
     // Шаг 1: Ввод монеты -------------------------------------------------------------------------
     (ctx) => {
     ctx.wizard.state.stepError=false; 
-    ctx.reply('Выберите монету:', {
+    ctx.reply('Выберите сервер, к которому привязан Ваш кошелек:', {
       parse_mode: 'HTML',
       ...Markup.inlineKeyboard([
-        Markup.button.callback ('Ethereum','chooseEth'),
-        Markup.button.callback('Ergo', 'chooseErgo'),        
+        { text: "p2p-spb", callback_data: "chooseSpb" },
+        { text: "p2p-ekb", callback_data: "chooseEkb" },
+        { text: "p2p-usa", callback_data: "chooseUsa" } ,
+        { text: "p2p-south", callback_data: "chooseSouth" }      
       ])    
     })
     return ctx.wizard.next(); 
@@ -108,15 +110,15 @@ const subscribe = new Scenes.WizardScene(
   } 
 );
 // Обработчик выбра монеты Ethereum ---------------------------------------------------------------
-subscribe.action('chooseEth', (ctx)=>{
-  ctx.wizard.state.poolId = 'ethpool';
+subscribe.action('chooseSpb', (ctx)=>{
+  ctx.wizard.state.server = 'p2p-spb';
   ctx.reply('Подписаться на оповещение о новом блоке ethereum?', {
     parse_mode: 'HTML',
     ...Markup.inlineKeyboard([
       { text: "Да", callback_data: 'subBlockEth' }, 
       { text: "Нет", callback_data: 'notSubBlockEth' }
     ])
-  }) 
+  })   
 });
 // Обработчик подписки на блок Ethereum -----------------------------------------------------------
 subscribe.action('subBlockEth',  (ctx)=>{
