@@ -3,14 +3,16 @@ const axios = require('axios');
 const settings = require('../../botSettings.json');
 const api = settings.MiningCoreApiEndpoints;
 const users = require('../storage/users.json');
+const configCoins = require('../../configCoins');
 const { Scenes, Markup } = require("telegraf");
 const {logIt} = require('../libs/loger');
 
 // Сцена регистрации нового пользователя ----------------------------------------------------------
 const subscribe = new Scenes.WizardScene(
   "subSceneWizard", 
-    // Шаг 1: Ввод монеты -------------------------------------------------------------------------
-    (ctx) => {
+  // Шаг 1: Ввод монеты -------------------------------------------------------------------------
+  (ctx) => {
+    console.log(configCoins)
     ctx.wizard.state.stepError=false; 
     ctx.reply('Выберите сервер, к которому привязан Ваш кошелек:', {
       parse_mode: 'HTML',
@@ -18,6 +20,20 @@ const subscribe = new Scenes.WizardScene(
         { text: "p2p-spb", callback_data: "chooseSpb" },
         { text: "p2p-ekb", callback_data: "chooseEkb" },
         { text: "p2p-usa", callback_data: "chooseUsa" } ,
+        { text: "p2p-south", callback_data: "chooseSouth" }      
+      ])    
+    })
+    return ctx.wizard.next(); 
+  },
+  // Шаг 2: Ввод монеты -------------------------------------------------------------------------
+  (ctx) => {
+    ctx.wizard.state.stepError=false; 
+    ctx.reply('Выберите сервер, к которому привязан Ваш кошелек:', {
+      parse_mode: 'HTML',
+      ...Markup.inlineKeyboard([
+        { text: "p2p-spb", callback_data: "chooseSpb" },
+        { text: "p2p-ekb", callback_data: "chooseEkb" },
+        { text: "p2p-usa", callback_data: "chooseUsa" } ,  
         { text: "p2p-south", callback_data: "chooseSouth" }      
       ])    
     })
@@ -102,23 +118,29 @@ const subscribe = new Scenes.WizardScene(
       ctx.reply('Подписаться?', {
         parse_mode: 'HTML',
         ...Markup.inlineKeyboard([
-          { text: "Да", callback_data: 'subHash' }, 
+          { text: "Да", callback_data:  'subHash' }, 
           { text: "Нет", callback_data: 'back' }
         ])
       })
     )     
   } 
 );
-// Обработчик выбра монеты Ethereum ---------------------------------------------------------------
+// Обработчики выбра монеты сервера ----------------------------------------------------------------
 subscribe.action('chooseSpb', (ctx)=>{
   ctx.wizard.state.server = 'p2p-spb';
-  ctx.reply('Подписаться на оповещение о новом блоке ethereum?', {
-    parse_mode: 'HTML',
-    ...Markup.inlineKeyboard([
-      { text: "Да", callback_data: 'subBlockEth' }, 
-      { text: "Нет", callback_data: 'notSubBlockEth' }
-    ])
-  })   
+  ctx.reply('Выберите монету:');   
+});
+subscribe.action('chooseEkb', (ctx)=>{
+  ctx.wizard.state.server = 'p2p-ekb';
+  ctx.reply('Выберите монету:');    
+});
+subscribe.action('chooseUsa', (ctx)=>{
+  ctx.wizard.state.server = 'p2p-usa';
+  ctx.reply('Выберите монету:');    
+});
+subscribe.action('chooseSouth', (ctx)=>{
+  ctx.wizard.state.server = 'p2p-south';
+  ctx.reply('Выберите монету:');    
 });
 // Обработчик подписки на блок Ethereum -----------------------------------------------------------
 subscribe.action('subBlockEth',  (ctx)=>{

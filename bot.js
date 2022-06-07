@@ -14,6 +14,7 @@ const {koeff} = require('./src/libs/utils.js');
 const {logIt} = require('./src/libs/loger.js');
 const fs = require('fs');
 
+
 // Создание менеджера сцен ------------------------------------------------------------------------
 const stage = new Scenes.Stage();
 stage.register( home, subscribe, unSubscribe, chengeSubscribe);
