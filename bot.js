@@ -14,7 +14,6 @@ const {koeff} = require('./src/libs/utils.js');
 const {logIt} = require('./src/libs/loger.js');
 const fs = require('fs');
 
-
 // Создание менеджера сцен ------------------------------------------------------------------------
 const stage = new Scenes.Stage();
 stage.register( home, subscribe, unSubscribe, chengeSubscribe);
@@ -57,11 +56,9 @@ function begin(){
     blockHeight:res.data[0].blockHeight,
     status: res.data[0].status
   } 
-  
   start();
   })
 }
-
 // Проверка появления нового блок -----------------------------------------------------------------
 function getBlock(){
   axios({
@@ -155,9 +152,26 @@ function  getHash(){
       if(response.data.performance==undefined){
         try{
           bot.telegram.sendMessage(item.userId,
-            'Ваше кошельк <b>' + item.wallet   + '</b>\n' +
-            'неактуален!'  
+            '<b>Внимание!</b>\n' +
+            'Ваш кошелек <b>' + item.wallet   + '</b>\n' +
+            'неактуален!\n' +
+            'Пользователь с этим кошельком автоматически <b>удален</b> из списка оповещения.' + 
+            'Для возобновления оповещения подпишитесь снова', 
+            {parse_mode: 'HTML'}  
           );
+          let index = users.findIndex(user => user.userId == item.userId);
+          if (index != -1){
+            users.splice(index, index+1);
+
+            console.log('Wallet ' + item.wallet + ' of user ' + item.userId +' is invalid!');
+            console.log('Removed user: Id -> ', item.userId);
+            console.log('Total Users: ', users.length);
+            logIt('Broken wallet ' + item.wallet + ' of user ' + item.userId +' is invalid!');       
+            logIt('Removed user: Id -> ', item.userId);
+            logIt('Total Users: ', users.length);
+
+            saveChanges();
+         }
         }catch(err){
           console.log('API ERORR! Performance request: ', err);
           logIt('API ERORR! Performance request: ', err);
@@ -177,16 +191,17 @@ function  getHash(){
                 bot.telegram.sendMessage(item.userId,
                   '<b>Предупреждение!</b>\n' +
                   'Хешрейт воркера '   + '«<b>' +  `${itemCW.name ==''? 'default': itemCW.name}` + '</b>»' + '\n' +
-                  'кошелька:<b>' + item.wallet   + '</b> \n' +
+                  'кошелька: <b>' + item.wallet   + '</b> \n' +
                   'опустился ниже установленного в <b>'  +  itemCW.hashLevel   +' '  +  itemCW.hashDev + '</b>\n' +
                   'и составляет <b>'  +  formatHashrate(itemAWhash)+ '</b>\n' +
-                  'Оповещение об уровне хешрейта этого воркера <b>отключено</b>.\n' +
-                  'Для возобновления оповещения устовновите новый уровень хешрейта для этого воркера', 
+                  'Оповещение об уровне хешрейта этого воркера <b>отключено!</b>.\n' +
+                  'Для возобновления оповещения для этого воркера устовновите новый уровень хешрейта', 
                   {parse_mode: 'HTML'}
                 );
                 itemCW.delivered = true;
                 console.log('A hashrate message has been sent to the user: Id -> ', item.userId);
                 logIt('A hashrate message has been sent to the user: Id -> ', item.userId);
+                saveChanges();
               }catch(err){
                 console.log('Error sending message about hashrate! ', err);
                 logIt('Error sending message about hashrate! ', err);
@@ -207,13 +222,14 @@ function  getHash(){
             let index = controlledWorkers.findIndex(item=>item.name == itemCW.name);
             if (index != -1){
               controlledWorkers.splice(index, index+1);
-              console.log('Broken worker: «' + itemCW.name + '» of wallet: "' + item.wallet + '" deleted');
-              logIt('Broken worker: «' + itemCW.name + '» of wallet: "' + item.wallet + '" deleted');
+              console.log('Broken worker: «' + itemCW.name + '» of wallet: "' + item.wallet + ' deleted!');
+              logIt('Broken worker: «' + itemCW.name + '» of wallet ' + item.wallet + ' deleted!');
+              saveChanges();
            }
           }
         }
-      })//-----------------------------------------------------------------------------------------
-
+      })
+      //-------------------------------------------------------------------------------------------
       if (response.data.performance == undefined){
         console.log('Hash polling error!');
         logIt('Hash polling error! bot.js 194 стр');
@@ -226,14 +242,16 @@ function  getHash(){
       return
      })
   })
-  // Запись новых данных о пользователях в файл ---------------------------------------------------
+}
+// Запись новых данных о пользователях в файл -----------------------------------------------------
+function saveChanges(){
   try{
-     fs.writeFileSync('./src/storage/users.json', JSON.stringify(users));
+  fs.writeFileSync('./src/storage/users.json', JSON.stringify(users));
   }catch(err){
-    console.log('Error writing to the information file of the delivered message: ',err);
-    logIt('Error writing to the information file of the delivered message: ',err);
+    console.log('Error writing to the information file of the delivered message: ', err);
+    logIt('Error writing to the information file of the delivered message: ', err);
   }
 }
-
+// ------------------------------------------------------------------------------------------------  
 
 

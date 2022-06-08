@@ -58,7 +58,9 @@ const chengeSubscribe = new Scenes.WizardScene(
           text += `${i+1}) «`+ `${wrk[i]}` +'»\n'
         }
         ctx.reply('Ваши актуальные воркеры:\n' + text);
-        ctx.reply('Выберите нужный на выпадающей клавиатуре или наберите вручную:', Markup.keyboard(wrk).oneTime().resize())
+        ctx.reply('Выберите нужный на выпадающей клавиатуре или наберите вручную:',
+        Markup.keyboard(wrk,{ wrap: (btn, index, currentRow) => currentRow.length >=4 })
+        .oneTime().resize())
         return ctx.wizard.next();        
          
       }).catch(function (error) {   

@@ -12,7 +12,6 @@ const subscribe = new Scenes.WizardScene(
   "subSceneWizard", 
   // Шаг 1: Ввод монеты -------------------------------------------------------------------------
   (ctx) => {
-    console.log(configCoins)
     ctx.wizard.state.stepError=false; 
     ctx.reply('Выберите сервер, к которому привязан Ваш кошелек:', {
       parse_mode: 'HTML',
@@ -28,18 +27,11 @@ const subscribe = new Scenes.WizardScene(
   // Шаг 2: Ввод монеты -------------------------------------------------------------------------
   (ctx) => {
     ctx.wizard.state.stepError=false; 
-    ctx.reply('Выберите сервер, к которому привязан Ваш кошелек:', {
-      parse_mode: 'HTML',
-      ...Markup.inlineKeyboard([
-        { text: "p2p-spb", callback_data: "chooseSpb" },
-        { text: "p2p-ekb", callback_data: "chooseEkb" },
-        { text: "p2p-usa", callback_data: "chooseUsa" } ,  
-        { text: "p2p-south", callback_data: "chooseSouth" }      
-      ])    
-    })
+    let currCoin = configCoins.find(item=>item.symbol==ctx.message.text);
+    if(currCoin!=undefined) ctx.wizard.state.coinPort = currCoin.port;
     return ctx.wizard.next(); 
   },
-  // Шаг 2: Ввод кошелька -------------------------------------------------------------------------
+  // Шаг 3: Ввод кошелька -------------------------------------------------------------------------
   (ctx) => {
       axios.get(api + '/api/pools/' + ctx.wizard.state.poolId + '/miners/' + ctx.message.text)
     .then((response)=> {
@@ -71,7 +63,7 @@ const subscribe = new Scenes.WizardScene(
       return
     })   
   },
-  // Шаг 3: Ввод воркера и единицы измерения ------------------------------------------------------
+  // Шаг 4: Ввод воркера и единицы измерения ------------------------------------------------------
   (ctx) => {
     if (!ctx.wizard.state.tempWorkerNames.includes(ctx.message.text) && !ctx.wizard.state.stepError){
       ctx.reply(`Воркера «${ctx.message.text}» не существует!`);
@@ -93,7 +85,7 @@ const subscribe = new Scenes.WizardScene(
     })
     return ctx.wizard.next(); 
   },     
-  // Шаг 4: Ввод хешрейта -------------------------------------------------------------------------
+  // Шаг 5: Ввод хешрейта -------------------------------------------------------------------------
   (ctx) => {
     if (ctx.wizard.state.stepError) {
       ctx.reply('Выберите кнопками выше!'); 
@@ -128,7 +120,11 @@ const subscribe = new Scenes.WizardScene(
 // Обработчики выбра монеты сервера ----------------------------------------------------------------
 subscribe.action('chooseSpb', (ctx)=>{
   ctx.wizard.state.server = 'p2p-spb';
-  ctx.reply('Выберите монету:');   
+  let buttons = [];
+  configCoins.forEach(item=>{buttons.push(item.symbol)});
+  ctx.reply('Выберите монету:',
+  Markup.keyboard(buttons,{ wrap: (btn, index, currentRow) => currentRow.length >=5})
+  .oneTime().resize())
 });
 subscribe.action('chooseEkb', (ctx)=>{
   ctx.wizard.state.server = 'p2p-ekb';
